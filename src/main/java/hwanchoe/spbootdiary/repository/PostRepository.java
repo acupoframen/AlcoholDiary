@@ -1,0 +1,12 @@
+package hwanchoe.spbootdiary.repository;
+import hwanchoe.spbootdiary.domain.Post;
+import hwanchoe.spbootdiary.search.PostSearch;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+public interface PostRepository extends JpaRepository<Post,Integer>, PostSearch {
+    @Query (value="select now()",nativeQuery = true)
+    String getTime();
+}
