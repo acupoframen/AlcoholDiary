@@ -1,78 +1,69 @@
 package hwanchoe.spbootdiary.controller;
 
-import hwanchoe.spbootdiary.domain.Post;
 import hwanchoe.spbootdiary.dto.PageRequestDTO;
 import hwanchoe.spbootdiary.dto.PageResponseDTO;
 import hwanchoe.spbootdiary.dto.PostDTO;
 import hwanchoe.spbootdiary.service.PostService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.naming.Binding;
-
-@Controller
+@Tag(name = "Post API", description = "API for managing posts")
+@RestController
 @RequestMapping("/post")
 @RequiredArgsConstructor
 public class PostController {
+
     private final PostService postService;
+
     @GetMapping("/list")
-    public void list(PageRequestDTO pageRequestDTO, Model model){
-        PageResponseDTO<PostDTO> responseDTO= postService.list(pageRequestDTO);
-        model.addAttribute("responseDTO",responseDTO);
-        model.addAttribute("events",responseDTO.getDtoList());
+    public ResponseEntity<PageResponseDTO<PostDTO>> list(PageRequestDTO pageRequestDTO) {
+        PageResponseDTO<PostDTO> responseDTO = postService.list(pageRequestDTO);
+        return ResponseEntity.ok(responseDTO);
     }
+
     @GetMapping("/register")
-    public void registerGET(){
-        ;
+    public ResponseEntity<Void> registerGET() {
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/calendar")
-    public void calendarGET(){
-        ;
+    public ResponseEntity<Void> calendarGET() {
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/register")
-    public String registerPost(@Valid PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public ResponseEntity<String> registerPost(@Valid @RequestBody PostDTO postDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errors", bindingResult.getAllErrors());
-            return "redirect:/post/register";
+            return ResponseEntity.badRequest().body("Validation errors occurred");
         }
         int id = postService.register(postDTO);
-        redirectAttributes.addFlashAttribute("result",id);
-        return "redirect:/post/list";
+        return ResponseEntity.ok("Post registered with ID: " + id);
     }
-    @GetMapping({"/read","/modify"})
-    public void read(int id, PageRequestDTO pageRequestDTO, Model model){
-        PostDTO postDTO = postService.readOne(id);
-        model.addAttribute("dto",postDTO);
 
+    @GetMapping({"/read", "/modify"})
+    public ResponseEntity<PostDTO> read(@RequestParam int id) {
+        PostDTO postDTO = postService.readOne(id);
+        return ResponseEntity.ok(postDTO);
     }
+
     @PostMapping("/modify")
-    public String modify(PageRequestDTO pageRequestDTO, @Valid PostDTO postDTO,
-                         BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public ResponseEntity<String> modify(@Valid @RequestBody PostDTO postDTO, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            String link = pageRequestDTO.getLink();
-            redirectAttributes.addFlashAttribute("errors", bindingResult.getAllErrors());
-            redirectAttributes.addAttribute("id", postDTO.getId());
-            return "redirect:/post/modify?" + link;
+            return ResponseEntity.badRequest().body("Validation errors occurred");
         }
         postService.modify(postDTO);
-        redirectAttributes.addFlashAttribute("result", "modified");
-        redirectAttributes.addAttribute("id", postDTO.getId());
-        return "redirect:/post/read";
-    }
-    @PostMapping("/remove")
-    public String remove (int id, RedirectAttributes redirectAttributes){
-        postService.remove(id);
-        redirectAttributes.addFlashAttribute("result","removed");
-        return "redirect:/post/list";
+        return ResponseEntity.ok("Post modified");
     }
 
+    @PostMapping("/remove")
+    public ResponseEntity<String> remove(@RequestParam int id) {
+        postService.remove(id);
+        return ResponseEntity.ok("Post removed");
+    }
 }
