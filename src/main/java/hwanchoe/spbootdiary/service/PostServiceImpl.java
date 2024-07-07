@@ -4,6 +4,7 @@ import hwanchoe.spbootdiary.domain.Post;
 import hwanchoe.spbootdiary.dto.PageRequestDTO;
 import hwanchoe.spbootdiary.dto.PageResponseDTO;
 import hwanchoe.spbootdiary.dto.PostDTO;
+import hwanchoe.spbootdiary.dto.PostListReplyCountDTO;
 import hwanchoe.spbootdiary.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -66,5 +67,20 @@ public class PostServiceImpl implements PostService{
                         .total((int)result.getTotalElements())
                         .build();
     }
+
+    @Override
+    public PageResponseDTO<PostListReplyCountDTO> listWithReplyCount(PageRequestDTO pageRequestDTO) {
+        String[] types = pageRequestDTO.getTypes();
+        String keyword = pageRequestDTO.getKeyword();
+        Pageable pageable = pageRequestDTO.getPageable("id");
+        Page<PostListReplyCountDTO> result= postRepository.searchWithReplyCount(types,keyword,pageable);
+        return PageResponseDTO.<PostListReplyCountDTO>withAll()
+                .pageRequestDTO(pageRequestDTO)
+                .dtoList(result.getContent())
+                .total((int)result.getTotalElements())
+                .build();
+    }
+
+
 }
 
